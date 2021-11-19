@@ -1,0 +1,29 @@
+---
+- hosts: webservers
+  tasks:
+    - name: Install NGINX
+      include_role:
+        name: ansible-role-nginx
+      vars:
+        nginx_debug_output: true
+        nginx_selinux: true
+        nginx_selinux_tcp_ports:
+          - 80
+          - 443
+        nginx_logrotate_conf:
+          paths
+            - /var/log/nginx/*.log
+
+    - name: ensure nginx is at the latest version
+      apt: name=nginx state=latest
+
+    - name: start nginx
+      service:
+        name: nginx
+        state: started
+
+    - name: add nginx rule
+      lineinfile:
+        path: /var/log/nginx/*.log
+        line: ~* ^/wpcontent/plugins/.+\.(txt|log|md) deny all; error_page 403 =404 / ;
+        insertafter: EOF
